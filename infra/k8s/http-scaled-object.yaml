@@ -1,0 +1,24 @@
+kind: HTTPScaledObject
+apiVersion: http.keda.sh/v1alpha1
+metadata:
+  name: strange-radha-3367b5d70b-scaler
+  namespace: apps-release
+spec:
+  hosts:
+    - cc1fbde45ead-in-south-01.mayson.dev
+  pathPrefixes:
+    - /ap-northeast-1-backstractelb-132c5a-coll-d07d71671aaa47f58d683df2e93c169e/ # e.g. /infallible-naveen-... strange-radha-3367b5d70b/
+  scaleTargetRef:
+    name: strange-radha-3367b5d70b-depl
+    kind: Deployment
+    apiVersion: apps/v1
+    service: strange-radha-3367b5d70b-srv # e.g. coll-8a2a...-srv
+    port: 80
+  replicas:
+    min: 0
+    max: 10
+  scaledownPeriod: 1800 #inseconds
+  scalingMetric:
+    requestRate:
+      targetValue: 100
+      window: 1m

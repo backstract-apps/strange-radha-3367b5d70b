@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-configmap-strange-radha-3367b5d70b
+  namespace: apps-release
+data:
+  alloy.river: |
+    logging {
+      level  = "info"
+      format = "logfmt"
+    }
+
+    // Direct in-pod OTLP Receiver
+    otelcol.receiver.otlp "app_otlp" {
+      grpc {
+        endpoint = "127.0.0.1:4317"
+      }
+      http {
+        endpoint = "127.0.0.1:4318"
+      }
+      output {
+        metrics = [otelcol.processor.batch.default.input]
+        logs    = [otelcol.processor.batch.default.input]
+      }
+    }
+
+    otelcol.processor.batch "default" {
+      timeout         = "1s"
+      send_batch_size = 1024
+      output {
+        metrics = [otelcol.exporter.prometheus.default.input]
+        logs    = [otelcol.exporter.loki.default.input]
+      }
+    }
+
+    otelcol.exporter.loki "default" {
+      forward_to = [loki.write.main.receiver]
+    }
+
+    loki.write "main" {
+      endpoint {
+        url = "https://loki.backstract.io/loki/api/v1/push"
+      }
+      external_labels = {
+        environment = "strange-radha-3367b5d70b",
+        source_type = "alloy_k8s_strange-radha-3367b5d70b",
+      }
+    }
+
+    otelcol.exporter.prometheus "default" {
+      forward_to = [prometheus.remote_write.main.receiver]
+    }
+
+    prometheus.remote_write "main" {
+      endpoint {
+        url = "https://prometheus.backstract.io/api/v1/write"
+      }
+    }
